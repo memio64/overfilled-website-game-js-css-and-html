@@ -1,0 +1,180 @@
+var gameScreen = document.getElementById("gameScreen");
+var dropper = document.getElementById("dropper");
+var both = 0; // checks if both inputs are being held
+var fishArray = []; //  places all the fish onto a list to detect collision
+var IDArray = []; // gives an id to the fish
+var heightFish = []; // gives height of fish
+var fishCounter = 0;
+var interval; // used to set up interval that checks every period of time whats being input 
+var playMode = true;
+var gravity = 0.05;
+
+var InAir = true;
+
+/* functions resposable for the left and right inputs of the dropper*/
+function moveLeft(){
+  var positionOfDropper = parseInt(window.getComputedStyle(dropper).getPropertyValue("left"));// obtains the style position in css from the dropper value
+  if(positionOfDropper > 0){
+  dropper.style.left = positionOfDropper - 2 + "px";
+  }
+} 
+
+function moveRight(){
+  var positionOfDropper = parseInt(window.getComputedStyle(dropper).getPropertyValue("left"));// obtains the style position in css from the dropper value
+  if(positionOfDropper < 380)
+    dropper.style.left = positionOfDropper + 2 + "px";
+}
+
+// function detects the offset position of any object on the page
+function getOffset(elem) {
+    const objPos = elem.getBoundingClientRect();
+    const gameScreenPos = gameScreen.getBoundingClientRect();
+    return {
+      left: objPos.left - gameScreenPos.left + window.scrollX ,
+      top: objPos.top - gameScreenPos.top + window.scrollY
+    };
+}
+
+/* function detects if an input has been regestered */
+document.addEventListener("keydown", event =>{
+  if(both == 0){
+    both++;
+  if(event.key=== "ArrowLeft" || event.key === 'a'){
+    interval = setInterval(moveLeft,1);/*will repeatedly play the function moveLeft */
+  }
+  if(event.key=== "ArrowRight" || event.key === 'd'){
+    interval = setInterval(moveRight,1);/*will repeatedly play the function moveRight */
+  }
+}
+if(event.key=== 'e'){
+  var fish = document.createElement("div"); // spawns a fish container
+  let fishDropPool = 0; // change to randomizer
+  FishType(fishDropPool, fish); //sets the fish
+  FishSpawnPosition(fish, 40);
+
+}
+});
+
+/*checks if the input is released then clears the current interval */
+document.addEventListener("keyup", event =>{
+  clearInterval(interval);
+  both = 0;
+});
+// sets the spawn position of the fish
+function FishSpawnPosition(fish, depthFromDropper){
+  let offsetOfDropper = getOffset(dropper);
+  fish.style.position = "absolute";
+  fish.style.left = offsetOfDropper.left + "px";
+  fish.style.top = offsetOfDropper.top + "px";
+  fish.style.top = depthFromDropper + "px";
+  gameScreen.append(fish);
+}
+
+function FishType(IdOfFish, fishContainer){
+  var fishID = 0;
+  var height = 0;
+  switch(IdOfFish) {
+    case 0:
+      fishContainer.setAttribute("class", "fishZero"); 
+      fishID = 0;
+      height = 40;
+      fishContainer.setAttribute("id", fishID); 
+      fishArray.push(fishContainer);
+      IDArray.push(fishID);
+      heightFish.push(height);
+
+      break;
+      case 1:
+      fishContainer.setAttribute("class", "fishOne");
+      fishID = 1;
+      height = 50;
+      fishContainer.setAttribute("id", fishID); 
+      fishArray.push(fishContainer);
+      IDArray.push(fishID);
+      heightFish.push(height);
+      
+      break;
+      case 2:
+      fishContainer.setAttribute("class", "fishTwo");
+      fishID = 2;
+      height = 60;
+      fishContainer.setAttribute("id", fishID); 
+      fishArray.push(fishContainer);
+      IDArray.push(fishID);
+      heightFish.push(height);
+      
+      break;
+    default:
+    break;
+  }  
+  
+}
+function FishGravity(){
+  for(let i = 0; i < fishArray.length; i++){
+    let fish = fishArray[i];
+    let fishHeight = heightFish[i];
+    let currentPosition = parseFloat(fish.style.top) + fish.Yspeed;
+    
+    if(currentPosition < 500 - fishHeight){
+    
+    fish.Yspeed += gravity;
+    let newPosition = parseFloat(fish.style.top) + fish.Yspeed;
+    fish.style.top = newPosition + "px";
+    }
+    else{
+    fish.Yspeed = 0;
+    fish.style.top = fish.style.top;
+    }
+  }
+   
+  
+  
+}
+
+
+function fishCollision() {
+  
+  for(let i = 0; i < fishArray.length; i++){
+    for(let j = 1 + i;j < fishArray.length; j++){
+      const fishA = fishArray[i];
+      const fishB = fishArray[j];
+      const fishIdA = IDArray[i];
+      const fishIdB = IDArray[j];
+      const fishHeightA = heightFish[i];
+      const fishHeightB = heightFish[j];
+      let colliderA = fishA.getBoundingClientRect();
+      let colliderB = fishB.getBoundingClientRect();
+
+      if(colliderA.width + colliderA.x >= colliderB.x &&
+         colliderA.x <= colliderB.x + colliderB.width &&
+        colliderA.y + colliderA.height >= colliderB.y &&
+        colliderA.y <= colliderB.y + colliderB.height
+      ){
+        console.log(fishB.style.top);
+        let currentY = parseInt(fishB.style.top) || 0; 
+        fishB.style.top = (currentY - 1) + "px";
+        
+        
+        
+      }
+      else{
+       
+       
+        }
+      }
+      
+
+    }
+  }
+
+
+
+// looping fucntion that repeatedly sends out information about the game such as collision
+function gameLoop(){
+  
+  fishCollision();
+  FishGravity();
+  window.requestAnimationFrame(gameLoop);
+}
+// animation frame allows us too repeatedly loop the code without having to resort to a while true loop
+window.requestAnimationFrame(gameLoop);
